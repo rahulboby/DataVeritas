@@ -1,4 +1,4 @@
-# DQ Agent
+# Data Profiling Agent
 
 Canonical code now lives in `dq_agent_streamlit_app/`.
 
