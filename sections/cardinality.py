@@ -23,7 +23,7 @@ def displayCardinalityStats(df):
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<h1 class="main-title">Cardinality Analytics</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">Cardinality Audit</h1>', unsafe_allow_html=True)
 
     # --- 1. Original Calculations (RETAINED) ---
     cardinality_data = []

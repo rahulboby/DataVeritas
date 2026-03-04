@@ -245,7 +245,7 @@ def displayNullStats(df):
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<h1 class="main-title">Null Value Analytics</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">Data Completeness Audit</h1>', unsafe_allow_html=True)
     
     # --- CALCULATE STATISTICS (CACHED) ---
     stats = calculate_null_statistics(df)

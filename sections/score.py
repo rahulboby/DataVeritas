@@ -26,8 +26,8 @@ def displayScoreStats(df):
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="score-title">Overall Data Quality Score</div>', unsafe_allow_html=True)
-    st.markdown('<div class="score-subtitle">Composite score across completeness, uniqueness, outliers, and consistency.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="score-title">Data Trust Score</div>', unsafe_allow_html=True)
+    # st.markdown('<div class="score-subtitle">Composite score across completeness, uniqueness, outliers, and consistency.</div>', unsafe_allow_html=True)
     
     # 1. Get Scores
     dq_score, null_score, completeness_score, uniqueness_score, outlier_score, violation_score = getOverallScore(df)
@@ -44,9 +44,11 @@ def displayScoreStats(df):
         with col2:
             st.write("### Data Health Status")
             if dq_score > 0.9:
-                st.success("Excellent")
+                st.success("Trust Level: Excellent")
             elif dq_score > 0.7:
-                st.warning("Flagged: Data requires minor cleaning.")
+                st.warning("Trust Level: Moderate - Data requires minor cleaning.")
+            elif dq_score > 0.5:
+                st.warning("Trust Level: Low - Quality of Data")
             else:
                 st.error("Critical: Data very unreliable.")
 
@@ -108,7 +110,7 @@ def displayScoreStats(df):
             st.dataframe(df.drop_duplicates().head(50000))
             st.markdown(f"{df.drop_duplicates().shape[0]:,} rows × {df.drop_duplicates().shape[1]:,} columns")
         
-    st.markdown('<div class="score-title">Field-wise Data Quality Score</div>', unsafe_allow_html=True)
+    st.markdown('<div class="score-title">Field-wise Data Trust Score</div>', unsafe_allow_html=True)
     with st.container(border=True):
         select_column = st.selectbox("Select a column to view field-wise scores:", df.columns, placeholder="Select column", index = None)
 

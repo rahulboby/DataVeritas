@@ -202,7 +202,7 @@ def render_rule_config(df, rule, idx):
 # ------------------------ MAIN DISPLAY FUNCTION ------------------------
 
 def displayConsistencyStats(df):
-    st.title("Data Consistency Validation")
+    st.title("Data Consistency Audit")
     
     # Rule Builder Section
     render_rule_builder(df)

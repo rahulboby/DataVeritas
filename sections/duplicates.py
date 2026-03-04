@@ -26,7 +26,7 @@ def displayDuplicateStats(df):
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<h1 class="main-title">Duplicate Analytics</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">Data Duplicate Audit</h1>', unsafe_allow_html=True)
 
     # --- 1. CALCULATIONS ---
     total_rows = df.shape[0]

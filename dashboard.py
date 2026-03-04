@@ -14,7 +14,7 @@ from core.data import generator as DG
 
 # ==================== PAGE CONFIG ====================
 st.set_page_config(
-    page_title="DQ Agent - Data Quality Platform",
+    page_title="Data Trust Platform",
     page_icon=":bar_chart:",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -263,8 +263,8 @@ def generate_data(n_rows: int) -> pd.DataFrame:
 
 # ==================== SIDEBAR ====================
 with st.sidebar:
-    st.markdown("## DQ Agent")
-    st.caption("Enterprise Data Quality Platform")
+    st.markdown("## ProjName")
+    st.caption("Enterprise Data Integrity & Trust Platform")
     st.divider()
 
     # Navigation (only show when dataset is ready)
@@ -324,10 +324,10 @@ if not st.session_state.dataset_ready or st.session_state.df is None:
     # Welcome header
     st.markdown("""
         <div class='hero-shell'>
-            <span class='hero-kicker'>Data Reliability Workspace</span>
-            <h1 class='hero-title'>Operational Data Quality for Business Teams</h1>
+            <span class='hero-kicker'>AI Data Integrity & Trust Platform</span>
+            <h1 class='hero-title'>Assess Data Reliability Before It Powers Decisions</h1>
             <p class='hero-subtitle'>
-                Audit completeness, duplication, cardinality, outliers, and rule consistency from one governed interface.
+                Evaluate dataset integrity using trust scores, anomaly detection, rule validation, and data profiling from a single governance interface.
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -377,7 +377,7 @@ if not st.session_state.dataset_ready or st.session_state.df is None:
         st.markdown("<div class='data-source-card'>", unsafe_allow_html=True)
 
         # Source selection
-        tab1, tab2 = st.tabs(["Upload File", "Generate Sample Data"])
+        tab1, tab2 = st.tabs(["Upload File", "Generate Sample Data (Testing Feature)"])
 
         with tab1:
             st.markdown("### Upload CSV or Excel File")
@@ -422,6 +422,7 @@ if not st.session_state.dataset_ready or st.session_state.df is None:
                     st.error(f"Error loading file: {str(e)}")
 
         with tab2:
+            st.warning("DEPRECATED FEATURE: This feature is only used to test the application and will be removed soon.")
             st.markdown("### Generate Synthetic Dataset")
             st.caption("Create sample data for testing and exploration")
 

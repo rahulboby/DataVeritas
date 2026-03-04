@@ -9,7 +9,8 @@ from sklearn.impute import SimpleImputer
 from core.outliers.outlier_score import getOutlierScore
 
 def displayOutlierStats(df: pd.DataFrame):
-    st.title("OUTLIER STATS")
+    st.markdown('<h1 class="main-title">Anomaly Audit</h1>', unsafe_allow_html=True)
+
     
     # Get column stats
     _, _, _, _, numeric_cols, _, _ = vdm.get_column_stats(df)

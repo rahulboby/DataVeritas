@@ -8,7 +8,7 @@ from core.value_distribution.columns_stats import get_column_stats
 # --- MAIN DISPLAY ---
 def displayValueDistributionStats(df):
     apply_custom_css()
-    st.markdown('<h1 class="main-title">Value Distribution Analytics</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">Value Distribution Audit</h1>', unsafe_allow_html=True)
 
     counts, constant_cols, datetime_cols, boolean_cols, numeric_cols, categorical_cols, identifier_cols = get_column_stats(df)
     filtered_counts = {k: v for k, v in counts.items() if v > 0}
