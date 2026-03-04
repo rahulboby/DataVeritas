@@ -263,7 +263,7 @@ def generate_data(n_rows: int) -> pd.DataFrame:
 
 # ==================== SIDEBAR ====================
 with st.sidebar:
-    st.markdown("## ProjName")
+    st.markdown("## DataVeritas")
     st.caption("Enterprise Data Integrity & Trust Platform")
     st.divider()
 
