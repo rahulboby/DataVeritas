@@ -76,8 +76,8 @@ def displayCardinalityStats(df):
     with col2:
         st.subheader("High Cardinality Distribution")
         # Filtered logic (RETAINED)
-        card_ratio = 0.5
-        filtered_cardinality_df = cardinality_df[cardinality_df["cardinality_ratio"] > card_ratio]
+        top_x = 5 # How many top fields to show in the plot
+        filtered_cardinality_df = cardinality_df.sort_values(by = "cardinality_ratio").head(top_x)
         
         if not filtered_cardinality_df.empty:
             fig_bar = px.bar(
@@ -103,6 +103,6 @@ def displayCardinalityStats(df):
             fig_bar.update_traces(texttemplate='%{text:.2f}', textposition='outside')
             
             st.plotly_chart(fig_bar)
-            st.caption(f"Showing columns with Cardinality Ratio > {card_ratio}")
+            st.caption(f"Showing top {top_x} Fields")
         else:
             st.info("No columns found with a cardinality ratio higher than 0.2.")

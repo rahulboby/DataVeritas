@@ -569,6 +569,6 @@ elif current_page == "AI Powered Rule based Data Merger (BETA)":
 st.divider()
 st.markdown("""
     <div style='text-align: center; color: #6b7280; padding: 1rem;'>
-        <p style='margin: 0;'>DQ Agent v2.0 | Built with Streamlit | 2024</p>
+        <p style='margin: 0;'>DataVeritas v1.0 | Built with Streamlit | 2024</p>
     </div>
 """, unsafe_allow_html=True)
