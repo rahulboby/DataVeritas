@@ -262,6 +262,8 @@ def generate_data(n_rows: int) -> pd.DataFrame:
     return DG.get_data(n_rows)
 
 # ==================== SIDEBAR ====================
+
+# Sidebar used for navigation
 with st.sidebar:
     st.markdown("## DataVeritas")
     st.caption("Enterprise Data Integrity & Trust Platform")
@@ -269,9 +271,7 @@ with st.sidebar:
 
     # Navigation (only show when dataset is ready)
     if st.session_state.dataset_ready and st.session_state.df is not None:
-        st.markdown("### Navigation")
-
-
+        
         # Render Preview Button
         if st.button(
                 "Data Preview",
@@ -283,7 +283,7 @@ with st.sidebar:
         
         # AUDIT BUTTONS
         pages = {
-            "Quality Score": "Data Trust Score",
+            "Trust Score": "Data Trust Score",
             "Distribution": "Value Distribution Audit",
             "Cardinality": "Cardinality Audit",
             "Duplicates": "Data Duplicates Audit",
@@ -596,7 +596,7 @@ elif current_page == "Entity Resolution Engine (BETA)":
     display_merge_data(filtered_df)
 
 elif current_page == "Dataset Drift Detector (BETA)":
-    st.warning("BETA feature: Still under Development")
+    st.warning("Still under Development")
 
 
 # ==================== FOOTER ====================

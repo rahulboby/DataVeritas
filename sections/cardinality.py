@@ -100,7 +100,7 @@ def displayCardinalityStats(df):
                 height=450
             )
             fig_bar.update_xaxes(showgrid=True, gridcolor='#E2E8F0')
-            fig_bar.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+            fig_bar.update_traces(texttemplate='%{text:.4f}', textposition='outside')
             
             st.plotly_chart(fig_bar)
             st.caption(f"Showing top {top_x} Fields")
