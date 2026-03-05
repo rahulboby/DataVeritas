@@ -4,7 +4,7 @@ Link: https://dataveritas.streamlit.app/
 
 ```
 
-dq_agent_streamlit_app/
+dataveritas/
   dashboard.py
   apps/
     dashboard_update.py
