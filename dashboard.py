@@ -271,18 +271,28 @@ with st.sidebar:
     if st.session_state.dataset_ready and st.session_state.df is not None:
         st.markdown("### Navigation")
 
+
+        # Render Preview Button
+        if st.button(
+                "Data Preview",
+                width='stretch',
+                type="primary" if st.session_state.current_page == "Data Preview" else "secondary"
+            ):
+                st.session_state.current_page = "Data Preview"
+                st.rerun()
+        
+        # AUDIT BUTTONS
         pages = {
-            "Data Preview": "Data Preview",
             "Quality Score": "Data Trust Score",
             "Distribution": "Value Distribution Audit",
             "Cardinality": "Cardinality Audit",
             "Duplicates": "Data Duplicates Audit",
             "Nulls": "Data Completeness Audit",
             "Outliers": "Anomaly Audit",
-            "Consistency": "Data Consistency Audit",
-            "Data Merger": "AI Powered Rule based Data Merger (BETA)"
+            "AI Readiness Score": "AI Readiness Score"
         }
-
+        st.subheader("Audits")
+        # Render the audit buttons
         for label, page_id in pages.items():
             if st.button(
                 label,
@@ -291,18 +301,36 @@ with st.sidebar:
             ):
                 st.session_state.current_page = page_id
                 st.rerun()
+        
+        # TOOL BUTTONS
+        tool_pages = {
+            "Consistency": "Data Consistency Rule Engine (BETA)",
+            "Data Merger": "Entity Resolution Engine (BETA)",
+            "Data Drift Detector": "Dataset Drift Detector (BETA)"
+        }
+        st.subheader("Tools")
+        # Render the rule buttons
+        for label, page_id in tool_pages.items():
+            if st.button(
+                label,
+                width='stretch',
+                type="primary" if st.session_state.current_page == page_id else "secondary"
+            ):
+                st.session_state.current_page = page_id
+                st.rerun()
 
-        st.divider()
+        # # Show metrics of data - the shape of dataset
+        # st.divider()
 
-        # Dataset info
-        st.markdown("### Current Dataset")
-        st.caption(f"**{st.session_state.dataset_label}**")
+        # # Dataset info
+        # st.markdown("### Current Dataset")
+        # st.caption(f"**{st.session_state.dataset_label}**")
 
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Rows", f"{len(st.session_state.df):,}")
-        with col2:
-            st.metric("Cols", len(st.session_state.df.columns))
+        # col1, col2 = st.columns(2)
+        # with col1:
+        #     st.metric("Rows", f"{len(st.session_state.df):,}")
+        # with col2:
+        #     st.metric("Cols", len(st.session_state.df.columns))
 
         st.divider()
 
@@ -558,12 +586,18 @@ elif current_page == "Data Completeness Audit":
 elif current_page == "Anomaly Audit":
     om.displayOutlierStats(filtered_df)
 
-elif current_page == "Data Consistency Audit":
+# The Tools: 
+elif current_page == "Data Consistency Rule Engine (BETA)":
+    st.warning("BETA Feature: Inaccurate results. Sill in processing.")
     ConM.displayConsistencyStats(filtered_df)
 
-elif current_page == "AI Powered Rule based Data Merger (BETA)":
+elif current_page == "Entity Resolution Engine (BETA)":
     st.warning("BETA feature: Data Merger uses weighted scoring. This feature performs best with datasets under 5,000 rows.")
     display_merge_data(filtered_df)
+
+elif current_page == "Dataset Drift Detector (BETA)":
+    st.warning("BETA feature: Still under Development")
+
 
 # ==================== FOOTER ====================
 st.divider()
