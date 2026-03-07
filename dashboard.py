@@ -10,6 +10,7 @@ from sections import cardinality as cm
 from sections import outliers as om
 from sections import score as ScM
 from sections import consistency as ConM
+from sections import ai_assistant as AIM
 from core.data import generator as DG
 
 # ==================== PAGE CONFIG ====================
@@ -306,7 +307,8 @@ with st.sidebar:
         tool_pages = {
             "Consistency": "Data Consistency Rule Engine (BETA)",
             "Data Merger": "Entity Resolution Engine (BETA)",
-            "Data Drift Detector": "Dataset Drift Detector (BETA)"
+            "Data Drift Detector": "Dataset Drift Detector (BETA)",
+            "AI Assistant": "DataVeritas AI Assistant"
         }
         st.subheader("Tools")
         # Render the rule buttons
@@ -597,6 +599,9 @@ elif current_page == "Entity Resolution Engine (BETA)":
 
 elif current_page == "Dataset Drift Detector (BETA)":
     st.warning("Still under Development")
+
+elif current_page == "DataVeritas AI Assistant":
+    AIM.displayAIAssistant(filtered_df)
 
 
 # ==================== FOOTER ====================

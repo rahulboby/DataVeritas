@@ -8,3 +8,4 @@ rapidfuzz
 streamlit_plotly_events
 scikit-learn
 faker
+groq
