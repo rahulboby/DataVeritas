@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply font-sans text-text-strong antialiased;
+    background: radial-gradient(1200px 500px at 0% -10%, #e7f1f7 0%, transparent 60%),
+      linear-gradient(180deg, #edf4f8 0%, #f7fafc 100%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .score-gauge {
+    @apply relative flex items-center justify-center;
+  }
+
+  .score-gauge svg {
+    transform: rotate(-90deg);
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-border rounded-2xl shadow-sm;
+  }
+
+  .metric-card {
+    @apply bg-white border border-border rounded-xl p-4 shadow-sm hover:shadow-md hover:border-brand-200 transition-all duration-300;
+  }
+
+  .sidebar-btn {
+    @apply w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-3;
+  }
+
+  .sidebar-btn-active {
+    @apply bg-white/15 text-white border border-white/20;
+  }
+
+  .sidebar-btn-inactive {
+    @apply text-white/70 hover:bg-white/10 hover:text-white;
+  }
+
+  .severity-critical {
+    @apply bg-red-50 border-red-200 text-red-800;
+  }
+
+  .severity-warning {
+    @apply bg-amber-50 border-amber-200 text-amber-800;
+  }
+
+  .severity-info {
+    @apply bg-blue-50 border-blue-200 text-blue-800;
+  }
+
+  .severity-good {
+    @apply bg-emerald-50 border-emerald-200 text-emerald-800;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-brand-200 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-brand-300;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scoreReveal {
+  from {
+    stroke-dashoffset: 283;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-score-reveal {
+  animation: scoreReveal 1.2s ease-out forwards;
+}
+
+/* Stagger children */
+.stagger-children>* {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.stagger-children>*:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.stagger-children>*:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.stagger-children>*:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.stagger-children>*:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.stagger-children>*:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.stagger-children>*:nth-child(6) {
+  animation-delay: 0.3s;
+}
