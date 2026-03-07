@@ -1,0 +1,192 @@
+# DataVeritas — Complete Project Walkthrough
+
+## What Is This Project?
+
+**DataVeritas** is an **Enterprise Data Quality & Trust Platform** built with **Streamlit**. It lets users upload any CSV/Excel dataset (or generate synthetic data) and instantly get a comprehensive quality audit with scores, visualizations, and actionable insights.
+
+> **Live app**: https://dataveritas.streamlit.app/
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend / App Framework | **Streamlit** |
+| Data Processing | **Pandas**, **NumPy** |
+| Visualization | **Plotly**, **Matplotlib**, **Seaborn** |
+| Fuzzy Matching | **RapidFuzz** |
+| Outlier Detection | **scikit-learn** (Isolation Forest) |
+| Synthetic Data | **Faker** |
+| Interactivity | **streamlit_plotly_events** |
+
+---
+
+## How The App Works (User Flow)
+
+```mermaid
+flowchart TD
+    A["Load Dataset<br/>(Upload CSV/Excel or Generate)"] --> B["Data Preview"]
+    B --> C{"Navigate Sidebar"}
+    C --> D["Trust Score"]
+    C --> E["Value Distribution Audit"]
+    C --> F["Cardinality Audit"]
+    C --> G["Duplicates Audit"]
+    C --> H["Nulls / Completeness Audit"]
+    C --> I["Anomaly / Outlier Audit"]
+    C --> J["Consistency Rule Engine (BETA)"]
+    C --> K["Entity Resolution / Merger (BETA)"]
+    C --> L["Dataset Drift Detector (BETA)"]
+```
+
+1. **Load data** — Upload a `.csv` or `.xlsx` file, or generate synthetic test data (100–200K rows) using Faker
+2. **Preview** — Browse data with column filtering
+3. **Run audits** — Navigate the sidebar to 7 different quality audits + 3 tools
+
+---
+
+## The Scoring System — How It All Works
+
+### Overall Data Quality (DQ) Score
+
+The main score is a **weighted average** of 5 sub-scores, computed in [overall_score.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/score/overall_score.py):
+
+| Sub-Score | Weight | What It Measures | How It's Calculated |
+|-----------|--------|-----------------|---------------------|
+| **Non-Null Records** | **10%** | Rows with zero nulls | `rows_with_no_nulls / total_rows` |
+| **Completeness** | **30%** | Cell-level non-null ratio | [(total_cells - null_cells) / total_cells](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/data/generator.py#7-10) |
+| **Uniqueness** | **30%** | How deduplicated the data is | `deduplicated_rows / total_rows` |
+| **Outlier** | **10%** | Proportion of non-outlier rows | `1.0 - (outlier_rows / total_rows)` using **Isolation Forest** |
+| **Consistency** | **20%** | Rule compliance ratio | `1 - (violated_rows / total_rows)` |
+
+```
+DQ Score = (null × 0.1) + (completeness × 0.3) + (uniqueness × 0.3) + (outlier × 0.1) + (consistency × 0.2)
+```
+
+**Trust Level Thresholds:**
+- **> 90%** → ✅ Excellent
+- **70–90%** → ⚠️ Moderate — needs minor cleaning
+- **50–70%** → ⚠️ Low quality
+- **< 50%** → 🔴 Critical — very unreliable
+
+### Per-Field DQ Score
+
+Each individual column also gets its own score in [overall_field_score.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/score/overall_field_score.py):
+
+| Component | Weight |
+|-----------|--------|
+| Non-null ratio | **40%** |
+| Unique values ratio | **40%** |
+| Outlier-free ratio | **20%** |
+
+---
+
+## Sub-Score Deep Dives
+
+### 1. Non-Null Records Score ([null_score.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/nulls/null_score.py))
+- Counts rows where **every column** is non-null
+- Formula: `df.dropna().count / total_rows`
+- A row with even 1 null is not counted
+
+### 2. Completeness Score ([completeness_score.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/nulls/completeness_score.py))
+- Cell-level granularity (not row-level)
+- Formula: [(total_cells - null_cells) / total_cells](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/data/generator.py#7-10)
+- More forgiving than the Non-Null score
+
+### 3. Uniqueness Score ([uniqueness_score.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/cardinality/uniqueness_score.py))
+- Identifies exact duplicate rows
+- Counts: purely unique rows + first occurrence of duplicated rows
+- Formula: [(pure_unique + first_of_duplicates) / total_rows](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/data/generator.py#7-10)
+
+### 4. Outlier Score ([outlier_score.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/outliers/outlier_score.py))
+- Uses **Isolation Forest** (300 estimators, `contamination='auto'`)
+- Only runs on numeric columns
+- Missing values are median-imputed before detection
+- Returns `1.0` if no numeric columns exist
+- Formula: `1.0 - (outlier_count / total_rows)`
+
+### 5. Consistency Score ([consistency_score_and_df.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/consistency/consistency_score_and_df.py))
+- Checks data against **business rules**
+- Two modes:
+  - **Default rules** (hardcoded): date sequencing, hybrid→automatic, order uniqueness, customer consistency
+  - **Dynamic rules** (user-configured via the Rule Engine UI)
+- Formula: `1 - (unique_violated_rows / total_rows)`
+
+---
+
+## The Rule Engine ([rule_engine.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/consistency/rule_engine.py))
+
+Users can define 7 types of validation rules:
+
+| Rule Type | What It Checks |
+|-----------|---------------|
+| **Mandatory Field** | No null values allowed |
+| **Data Type** | Values match expected type (String, Integer, Float, Date, Boolean) |
+| **Format** | Regex validation (Email, Phone, URL, Zipcode, or custom) |
+| **Range** | Numeric values within min/max bounds |
+| **Uniqueness** | No duplicate values in a column |
+| **Cross-Field Comparison** | Relationships between columns (`<`, `>`, `==`, `!=`, etc.) |
+| **Conditional (IF-THEN)** | If column A = X, then column B must = Y |
+
+---
+
+## Entity Resolution / Data Merger
+
+### Automatic Merging ([merge_data.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/duplicates/merge_data.py))
+Uses a 3-rule hierarchy to find and merge duplicate records:
+
+1. **Rule 1 — Exact Customer ID Match**: If `customer_id` values overlap
+2. **Rule 2 — 2+ Exact Field Matches**: If 2 or more key fields (`customer_name`, [email](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/data/generator.py#45-53), `phone_primary`, `phone_secondary`) match exactly
+3. **Rule 3 — Fuzzy Fallback**: 1 exact match + a fuzzy match on name (≥90%), email (≥95%), or address (≥90%)
+
+Merged values are combined with `/` separator (e.g., `"john doe / jon doe"`).
+
+### User-Defined Merging ([user_defined_merge_data.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/duplicates/user_defined_merge_data.py))
+A more advanced system where users can:
+- Define **custom matching rules** with multiple fields
+- Assign **weights** to each field and each rule
+- Choose matching logic per field: **exact**, **fuzzy**, or **partial** match
+- Set **thresholds** for fuzzy matching
+- **Manually review** merge candidates with a scored list
+- Approve/reject individual merges before execution
+
+---
+
+## Synthetic Data Generator ([generator.py](file:///c:/Users/mostr/OneDrive/Documents/GitHub/Priyanka/Samhita/Samhita_hackathon/core/data/generator.py))
+
+Generates realistic test data using Faker with intentional quality issues for testing:
+- Customer records with names, emails, phones, addresses
+- Order and vehicle data with dates, prices, fuel types, etc.
+- **Deliberately introduces**: typos (character transpositions, deletions, duplications), near-duplicate records, null values, and inconsistencies
+
+---
+
+## Project Structure
+
+```
+Samhita_hackathon/
+├── dashboard.py              ← Main Streamlit app & routing
+├── requirements.txt          ← Dependencies
+├── sections/                 ← UI layer (what the user sees)
+│   ├── score.py              ← Trust Score dashboard
+│   ├── duplicates.py         ← Duplicates audit UI
+│   ├── nulls.py              ← Completeness audit UI
+│   ├── cardinality.py        ← Cardinality audit UI
+│   ├── outliers.py           ← Anomaly audit UI
+│   ├── consistency.py        ← Rule Engine UI
+│   └── value_distribution.py ← Distribution audit UI
+├── core/                     ← Business logic layer
+│   ├── score/                ← Scoring calculations
+│   │   ├── overall_score.py
+│   │   └── overall_field_score.py
+│   ├── nulls/                ← Null/completeness logic
+│   ├── cardinality/          ← Uniqueness calculations
+│   ├── outliers/             ← Isolation Forest detection
+│   ├── consistency/          ← Rule engine + scoring
+│   ├── duplicates/           ← Merge/resolution logic
+│   ├── data/                 ← Synthetic data generator
+│   ├── downloads/            ← Export utilities
+│   └── value_distribution/   ← Distribution analysis
+├── apps/                     ← Extra app utilities
+└── scripts/                  ← Standalone scripts
+```
