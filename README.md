@@ -30,10 +30,3 @@ dataveritas/
   scripts/
     remove_duplicate_fuzzy.py
 ```
-
-## Run
-
-- Main dashboard: 
-Run these in CMD or your terminal
-  cd 'Path\to\dq_agent_streamlit_app'
-  streamlit run dashboard.py
