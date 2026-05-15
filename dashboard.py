@@ -290,8 +290,8 @@ with st.sidebar:
             "Trust Score": "Data Trust Score",
             "Distribution": "Value Distribution Audit",
             "Cardinality": "Cardinality Audit",
-            "Duplicates": "Data Duplicates Audit",
-            "Nulls": "Data Completeness Audit",
+            "Duplicates": "Uniqueness Audit",
+            "Nulls": "Completeness Audit",
             "Outliers": "Anomaly Audit",
             "AI Readiness Score": "AI Readiness Score"
         }
@@ -311,7 +311,7 @@ with st.sidebar:
             "Consistency": "Data Consistency Rule Engine (BETA)",
             "Data Merger": "Entity Resolution Engine (BETA)",
             "Data Drift Detector": "Dataset Drift Detector (BETA)",
-            "AI Assistant": "DataVeritas AI Assistant"
+            "DataVeritas Copilot": "DataVeritas Copilot"
         }
         st.subheader("Tools")
         # Render the rule buttons
@@ -594,14 +594,14 @@ elif current_page == "Cardinality Audit":
     st.session_state.module_timings["Cardinality"] = elapsed
     print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
-elif current_page == "Data Duplicates Audit":
+elif current_page == "Uniqueness Audit":
     start = time.perf_counter()
     dm.displayDuplicateStats(filtered_df)
     elapsed = time.perf_counter() - start
     st.session_state.module_timings["Duplicates"] = elapsed
     print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
-elif current_page == "Data Completeness Audit":
+elif current_page == "Completeness Audit":
     start = time.perf_counter()
     nm.displayNullStats(filtered_df)
     elapsed = time.perf_counter() - start
@@ -627,7 +627,7 @@ elif current_page == "Entity Resolution Engine (BETA)":
 elif current_page == "Dataset Drift Detector (BETA)":
     st.warning("Still under Development")
 
-elif current_page == "DataVeritas AI Assistant":
+elif current_page == "DataVeritas Copilot":
     AIM.displayAIAssistant(filtered_df)
 
 
