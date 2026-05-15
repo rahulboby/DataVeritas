@@ -210,7 +210,7 @@ def render_data_preview(df):
                 st.session_state["null_show_table"] = True
             
             if st.session_state.get("null_show_table", False):
-                st.dataframe(masked_df.head(50000), use_container_width=True)
+                st.dataframe(masked_df.head(50000), width='stretch')
         else:
             st.info("Select columns above to start filtering data.")
 
@@ -294,7 +294,7 @@ def displayNullStats(df):
     with col2:
         st.subheader("Column Health")
         fig_health = render_column_health_chart(chart_df)
-        st.plotly_chart(fig_health, use_container_width=True)
+        st.plotly_chart(fig_health, width='stretch')
 
     with col1:
         st.subheader(
@@ -302,7 +302,7 @@ def displayNullStats(df):
             help="If at least one field in a record is null, it is marked as incomplete."
         )
         fig_integrity = render_row_integrity_chart(stats)
-        st.plotly_chart(fig_integrity, use_container_width=True)
+        st.plotly_chart(fig_integrity, width='stretch')
 
     # --- DRILL DOWN (FRAGMENT - ONLY THIS RERUNS) ---
     render_data_preview(df)

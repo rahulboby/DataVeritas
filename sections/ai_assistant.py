@@ -110,7 +110,7 @@ def displayAIAssistant(df):
     selected_example = None
     for i, q in enumerate(EXAMPLE_QUESTIONS):
         with btn_cols[i % 3]:
-            if st.button(q, key=f"example_{i}", use_container_width=True):
+            if st.button(q, key=f"example_{i}", width='stretch'):
                 selected_example = q
 
     st.markdown("")  # spacing

@@ -27,6 +27,6 @@ def add_download_buttons(df, filename_prefix="data", show_header=True, show_data
         csv,
         f"{filename_prefix}.csv",
         "text/csv",
-        use_container_width=True
+        width='stretch'
     )
     

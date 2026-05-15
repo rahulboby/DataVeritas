@@ -40,7 +40,7 @@ def render_rule_builder(df):
                     )
                 
                 with col3:
-                    if st.button("Delete", key=f"delete_{rule['id']}", use_container_width=True):
+                    if st.button("Delete", key=f"delete_{rule['id']}", width='stretch'):
                         rules_to_remove.append(idx)
                 
                 # Expandable rule configuration
@@ -55,7 +55,7 @@ def render_rule_builder(df):
         st.info("No rules configured. Click 'Add New Rule' to get started.")
 
     # Button to add new rule
-    if st.button("Add New Rule", type="primary", use_container_width=True):
+    if st.button("Add New Rule", type="primary", width='stretch'):
         # Generate unique ID based on timestamp to avoid conflicts
         import time
         new_id = int(time.time() * 1000000) % 1000000  # Microsecond-based unique ID
@@ -209,7 +209,7 @@ def displayConsistencyStats(df):
     st.divider()
     
     # Validate Button
-    if st.button("Run Validation", type="primary", use_container_width=True):
+    if st.button("Run Validation", type="primary", width='stretch'):
         if not st.session_state.get('consistency_rules'):
             st.warning("No rules configured. Please add at least one rule.")
             return
@@ -292,7 +292,7 @@ def displayConsistencyStats(df):
                 },
                 disabled=["Rule", "Violations"],
                 hide_index=True,
-                use_container_width=True,
+                width='stretch',
                 key="rule_selector"
             )
             
@@ -352,7 +352,7 @@ def displayConsistencyStats(df):
             
             with tab1:
                 if len(consistent_df) > 0:
-                    st.dataframe(consistent_df.head(10000), use_container_width=True)
+                    st.dataframe(consistent_df.head(10000), width='stretch')
                     DH.add_download_buttons(consistent_df, f"consistent_records{'_filtered' if selected_rules else ''}", show_header=False)
                 else:
                     st.info("No consistent records found for the selected filter.")
@@ -381,13 +381,13 @@ def displayConsistencyStats(df):
                         pd.set_option("styler.render.max_elements", cells_to_render + 10000)
                         st.dataframe(
                             inconsistent_df.head(display_limit).style.apply(highlight_row_violations, axis=1),
-                            use_container_width=True
+                            width='stretch'
                         )
                     else:
                         st.warning(f"Dataset too large to highlight ({cells_to_render:,} cells). Showing without styling.")
                         st.dataframe(
                             inconsistent_df.head(display_limit),
-                            use_container_width=True
+                            width='stretch'
                         )
                         
                         # Show which columns are commonly violated

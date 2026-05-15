@@ -1,6 +1,7 @@
 
 import streamlit as st
 import pandas as pd
+import time
 
 from core.duplicates.user_defined_merge_data import display_merge_data
 from sections import value_distribution as vdm
@@ -248,6 +249,8 @@ if 'current_page' not in st.session_state:
     st.session_state.current_page = "Data Preview"
 if 'selected_cols' not in st.session_state:
     st.session_state.selected_cols = []
+if 'module_timings' not in st.session_state:
+    st.session_state.module_timings = {}
 
 # ==================== CACHED LOADERS ====================
 @st.cache_data(show_spinner="Loading CSV file...")
@@ -267,7 +270,7 @@ def generate_data(n_rows: int) -> pd.DataFrame:
 # Sidebar used for navigation
 with st.sidebar:
     st.markdown("## DataVeritas")
-    st.caption("Enterprise Data Integrity & Trust Platform")
+    st.caption("Unified Framework for Data Quality Auditing and Trust scoring in Tabular Datasets")
     st.divider()
 
     # Navigation (only show when dataset is ready)
@@ -462,7 +465,7 @@ if not st.session_state.dataset_ready or st.session_state.df is None:
                 n_rows = st.number_input(
                     "Number of rows",
                     min_value=100,
-                    max_value=200000,
+                    max_value=2000000,
                     value=20000,
                     step=1000,
                     help="Specify how many rows to generate"
@@ -571,22 +574,46 @@ if current_page == "Data Preview":
         st.metric("Memory Usage", f"{memory_mb:.2f} MB")
 
 elif current_page == "Data Trust Score":
+    start = time.perf_counter()
     ScM.displayScoreStats(filtered_df)
+    elapsed = time.perf_counter() - start
+    st.session_state.module_timings["Trust Score"] = elapsed
+    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
 elif current_page == "Value Distribution Audit":
+    start = time.perf_counter()
     vdm.displayValueDistributionStats(filtered_df)
+    elapsed = time.perf_counter() - start
+    st.session_state.module_timings["Value Distribution"] = elapsed
+    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
 elif current_page == "Cardinality Audit":
+    start = time.perf_counter()
     cm.displayCardinalityStats(filtered_df)
+    elapsed = time.perf_counter() - start
+    st.session_state.module_timings["Cardinality"] = elapsed
+    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
 elif current_page == "Data Duplicates Audit":
+    start = time.perf_counter()
     dm.displayDuplicateStats(filtered_df)
+    elapsed = time.perf_counter() - start
+    st.session_state.module_timings["Duplicates"] = elapsed
+    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
 elif current_page == "Data Completeness Audit":
+    start = time.perf_counter()
     nm.displayNullStats(filtered_df)
+    elapsed = time.perf_counter() - start
+    st.session_state.module_timings["Completeness"] = elapsed
+    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
 elif current_page == "Anomaly Audit":
+    start = time.perf_counter()
     om.displayOutlierStats(filtered_df)
+    elapsed = time.perf_counter() - start
+    st.session_state.module_timings["Anomaly Detection"] = elapsed
+    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
 # The Tools: 
 elif current_page == "Data Consistency Rule Engine (BETA)":
