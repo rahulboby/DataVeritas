@@ -9,6 +9,7 @@ from sections import duplicates as dm
 from sections import nulls as nm
 from sections import cardinality as cm
 from sections import extra_metrics as ExM
+from sections import correlations as CorrM
 from sections import outliers as om
 from sections import score as ScM
 from sections import consistency as ConM
@@ -290,7 +291,6 @@ with st.sidebar:
         pages = {
             "Trust Score": "Data Trust Score",
             "Distribution": "Value Distribution Audit",
-            "Extra Metrics": "Extra Metrics Audit",
             "Cardinality": "Cardinality Audit",
             "Duplicates": "Uniqueness Audit",
             "Nulls": "Completeness Audit",
@@ -310,10 +310,11 @@ with st.sidebar:
         
         # TOOL BUTTONS
         tool_pages = {
+            "Correlations": "Correlations",
+            "Extra Metrics": "Extra Metrics",
             "Consistency": "Data Consistency Rule Engine (BETA)",
             "Data Merger": "Entity Resolution Engine (BETA)",
-            "Data Drift Detector": "Dataset Drift Detector (BETA)",
-            "DataVeritas Copilot": "DataVeritas Copilot"
+            "Data Drift Detector": "Dataset Drift Detector (BETA)"
         }
         st.subheader("Tools")
         # Render the rule buttons
@@ -512,6 +513,12 @@ df = st.session_state.df
 filtered_df = df[st.session_state.selected_cols] if st.session_state.selected_cols else df
 
 current_page = st.session_state.current_page
+if current_page == "Extra Metrics Audit":
+    st.session_state.current_page = "Extra Metrics"
+    current_page = "Extra Metrics"
+elif current_page == "DataVeritas Copilot":
+    st.session_state.current_page = "Data Preview"
+    current_page = "Data Preview"
 
 # Page header
 st.markdown(f"<h1 style='margin-bottom: 0;'>{current_page}</h1>", unsafe_allow_html=True)
@@ -589,13 +596,6 @@ elif current_page == "Value Distribution Audit":
     st.session_state.module_timings["Value Distribution"] = elapsed
     print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
-elif current_page == "Extra Metrics Audit":
-    start = time.perf_counter()
-    ExM.displayExtraMetricsStats(filtered_df)
-    elapsed = time.perf_counter() - start
-    st.session_state.module_timings["Extra Metrics"] = elapsed
-    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
-
 elif current_page == "Cardinality Audit":
     start = time.perf_counter()
     cm.displayCardinalityStats(filtered_df)
@@ -625,6 +625,20 @@ elif current_page == "Anomaly Audit":
     print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
 # The Tools: 
+elif current_page == "Correlations":
+    start = time.perf_counter()
+    CorrM.displayCorrelationTool(filtered_df)
+    elapsed = time.perf_counter() - start
+    st.session_state.module_timings["Correlations"] = elapsed
+    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
+
+elif current_page == "Extra Metrics":
+    start = time.perf_counter()
+    ExM.displayExtraMetricsStats(filtered_df)
+    elapsed = time.perf_counter() - start
+    st.session_state.module_timings["Extra Metrics"] = elapsed
+    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
+
 elif current_page == "Data Consistency Rule Engine (BETA)":
     ConM.displayConsistencyStats(filtered_df)
 
@@ -635,14 +649,13 @@ elif current_page == "Entity Resolution Engine (BETA)":
 elif current_page == "Dataset Drift Detector (BETA)":
     st.warning("Still under Development")
 
-elif current_page == "DataVeritas Copilot":
-    AIM.displayAIAssistant(filtered_df)
-
 
 # ==================== FOOTER ====================
+AIM.displayFloatingAIAssistant(filtered_df)
+
 st.divider()
 st.markdown("""
     <div style='text-align: center; color: #6b7280; padding: 1rem;'>
-        <p style='margin: 0;'>DataVeritas v1.0 | Built with Streamlit | 2024</p>
+        <p style='margin: 0;'>DataVeritas v2.0 | Built with Streamlit | 2024</p>
     </div>
 """, unsafe_allow_html=True)

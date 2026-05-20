@@ -1,6 +1,7 @@
 import streamlit as st
 from core.score.overall_field_score import getOverallFieldScore
 from core.score.overall_score import getOverallScore
+from core.score.trust_score_report import render_trust_score_report
 from core.consistency.consistency_score_and_df import getConsistencyScore
 from core.outliers import outlier_score as OS
 
@@ -285,3 +286,10 @@ def displayScoreStats(df):
                     f"{outlier_score_field:.2%}",
                     delta="-Review" if (outlier_score_field - 0.90) < 0 else "Good"
                 )
+
+    render_trust_score_report(
+        df,
+        st.session_state.dq_results,
+        outlier_df=outlier_df,
+        violation_df=violation_df,
+    )
