@@ -310,39 +310,54 @@ def displayConsistencyStats(df):
         
         # Filter violations based on selected rules
         if violations_count > 0:
-            # Filter violation_df based on selected rules
+            # FIX: Properly filter violation_df by selected rules
+            # violation_df is the original full violation dataframe from apply_rules
+            # Filter it first, then find unique violated indices
             if selected_rules:
                 filtered_violation_df = violation_df[violation_df['rule_name'].isin(selected_rules)]
-                violated_indices = filtered_violation_df.index.unique()
+                if not filtered_violation_df.empty:
+                    violated_indices = filtered_violation_df.index.unique()
+                else:
+                    violated_indices = pd.Index([])
                 filter_info = f" (Filtered by: {', '.join(selected_rules)})"
             else:
                 violated_indices = violation_df.index.unique()
                 filter_info = " (All rules)"
             
+            # Partition data into consistent and inconsistent records
             consistent_df = df[~df.index.isin(violated_indices)].copy()
             inconsistent_df = df[df.index.isin(violated_indices)].copy()
             
-            # Add violation details to inconsistent records
-            if selected_rules:
-                # Only show violations for selected rules
-                relevant_violations = violation_df[violation_df['rule_name'].isin(selected_rules)]
-            else:
-                relevant_violations = violation_df
-            
-            if not relevant_violations.empty:
-                # Aggregate violation reasons per row
-                violation_details = relevant_violations.groupby(relevant_violations.index).agg({
-                    'violation_reason': lambda x: ' | '.join(x),
-                    'violated_field': lambda x: ', '.join(set(str(v) for v in x)),
-                    'rule_name': lambda x: ', '.join(set(x))
-                }).reset_index()
+            # FIX: Build violation details mapping from the filtered violation_df
+            # This ensures we only show violations for selected rules
+            if not inconsistent_df.empty:
+                # Use the filtered violation_df if rules were selected
+                if selected_rules:
+                    relevant_violations = violation_df[violation_df['rule_name'].isin(selected_rules)]
+                else:
+                    relevant_violations = violation_df
                 
-                inconsistent_df = inconsistent_df.merge(
-                    violation_details,
-                    left_index=True,
-                    right_on='index',
-                    how='left'
-                )
+                if not relevant_violations.empty:
+                    # Aggregate violation metadata per row index
+                    violation_details = relevant_violations.groupby(relevant_violations.index).agg({
+                        'violation_reason': lambda x: ' | '.join(x),
+                        'violated_field': lambda x: ', '.join(set(str(v) for v in x if v)),
+                        'rule_name': lambda x: ', '.join(set(x))
+                    }).reset_index()
+                    
+                    # FIX: Proper index-based merge
+                    # Rename the index column to match inconsistent_df index for merging
+                    violation_details = violation_details.rename(columns={'index': 'row_idx'})
+                    inconsistent_df = inconsistent_df.reset_index()
+                    inconsistent_df.columns = ['row_idx'] + list(inconsistent_df.columns[1:])
+                    
+                    inconsistent_df = inconsistent_df.merge(
+                        violation_details,
+                        on='row_idx',
+                        how='left'
+                    )
+                    
+                    inconsistent_df = inconsistent_df.set_index('row_idx')
             
             # Tabs for consistent/inconsistent
             tab1, tab2 = st.tabs([

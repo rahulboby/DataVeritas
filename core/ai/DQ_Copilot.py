@@ -23,10 +23,17 @@ from groq import Groq
 MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = (
-    "You are a data quality analyst working inside the DataVeritas platform. "
-    "You explain dataset quality issues, trust scores, drift detection results, "
-    "and privacy risks clearly. "
-    "Only answer using the provided dataset insights. Do not invent data."
+    "You are a data quality and machine learning expert working inside the DataVeritas platform. "
+    "You have access to detailed statistical analysis including correlations, distribution shapes, "
+    "feature quality scores, and class balance metrics. "
+    "You can answer questions about: "
+    "1) Which columns are best for building predictive models "
+    "2) Feature selection and relationships "
+    "3) Data quality issues affecting specific use cases "
+    "4) Statistical characteristics and data distributions "
+    "5) Data preparation recommendations. "
+    "Always reference specific metrics and column names from the insights provided. "
+    "Only answer using the provided dataset insights. Do not invent data or columns."
 )
 
 
@@ -98,7 +105,25 @@ def extract_dataset_insights(df: pd.DataFrame) -> dict:
     ]
 
     # ================================================================
-    # STEP 2 — Column-Level Features
+    # FIX: STEP 1.5 — Call core modules for all computations
+    # ================================================================
+    from core.value_distribution.distribution_characteristics import (
+        compute_numeric_distribution_characteristics,
+        compute_categorical_distribution_characteristics
+    )
+    from core.value_distribution.correlation_analysis import compute_correlation_matrix
+    
+    # Compute distribution characteristics for numeric columns
+    numeric_distribution_chars = compute_numeric_distribution_characteristics(df, numeric_cols)
+    
+    # Compute distribution characteristics for categorical columns
+    categorical_distribution_chars = compute_categorical_distribution_characteristics(df, categorical_cols)
+    
+    # Compute correlation matrix for numeric columns
+    correlation_data = compute_correlation_matrix(df, numeric_cols)
+
+    # ================================================================
+    # STEP 2 — Column-Level Features (orchestrate results from core)
     # ================================================================
     columns_info = {}
     numeric_set = set(numeric_cols)
@@ -116,33 +141,17 @@ def extract_dataset_insights(df: pd.DataFrame) -> dict:
             "datatype": str(df[col].dtype),
         }
 
-        # Numeric columns — add descriptive statistics
-        if col in numeric_set:
-            series = df[col].dropna()
-            if len(series) > 0:
-                q1 = float(series.quantile(0.25))
-                q3 = float(series.quantile(0.75))
-                iqr = q3 - q1
-                lower_fence = q1 - 1.5 * iqr
-                upper_fence = q3 + 1.5 * iqr
-                iqr_outliers = int(((series < lower_fence) | (series > upper_fence)).sum())
+        # FIX: Numeric columns — get all metrics from core module
+        if col in numeric_set and col in numeric_distribution_chars:
+            # All distribution characteristics already computed by core module
+            col_stats.update(numeric_distribution_chars[col])
+            # Add top correlations from correlation analysis core module
+            col_stats["top_correlations"] = correlation_data.get(col, {})
 
-                col_stats.update({
-                    "mean": round(float(series.mean()), 4),
-                    "std": round(float(series.std()), 4),
-                    "min": round(float(series.min()), 4),
-                    "max": round(float(series.max()), 4),
-                    "q1": round(q1, 4),
-                    "q3": round(q3, 4),
-                    "iqr_outlier_count": iqr_outliers,
-                })
-
-        # Categorical columns — add top value
-        if col in categorical_set:
-            vc = df[col].value_counts(dropna=True)
-            if len(vc) > 0:
-                col_stats["top_value"] = str(vc.index[0])
-                col_stats["top_frequency"] = int(vc.iloc[0])
+        # FIX: Categorical columns — get all metrics from core module
+        if col in categorical_set and col in categorical_distribution_chars:
+            # All categorical characteristics already computed by core module
+            col_stats.update(categorical_distribution_chars[col])
 
         # Privacy flag
         col_stats["is_privacy_risk"] = col in privacy_risk_columns
@@ -174,6 +183,8 @@ def extract_dataset_insights(df: pd.DataFrame) -> dict:
         "numeric_columns": numeric_cols,
         "categorical_columns": categorical_cols,
         "columns": columns_info,          # per-column detailed stats
+        # FIX: Add correlation data for feature relationship analysis
+        "correlation_matrix": correlation_data,  # {col: {corr_col: corr_value, ...}, ...}
     }
 
     return insights
@@ -262,13 +273,96 @@ def insights_to_context(insights: dict) -> str:
             lines.append(f"  {ctype}: {count}")
 
     # ================================================================
+    # Feature Quality & Modeling Suitability Analysis
+    # ================================================================
+    columns = insights.get("columns", {})
+    numeric_cols_list = insights.get("numeric_columns", [])
+    
+    # Rank numeric columns by feature quality (modeling suitability)
+    if numeric_cols_list:
+        lines.append("")
+        lines.append("=" * 50)
+        lines.append("Feature Quality for Modeling (Ranking):")
+        lines.append("=" * 50)
+        
+        feature_scores = []
+        for col in numeric_cols_list:
+            if col in columns:
+                score = columns[col].get("feature_quality_score", 0)
+                is_constant = columns[col].get("is_constant", False)
+                if not is_constant:
+                    feature_scores.append((col, score))
+        
+        # Sort by quality score (descending)
+        feature_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        for rank, (col, score) in enumerate(feature_scores[:10], 1):
+            lines.append(f"{rank}. {col}: {score}/100")
+    
+    # ================================================================
+    # Correlation & Relationship Analysis
+    # ================================================================
+    correlation_data = insights.get("correlation_matrix", {})
+    if correlation_data:
+        lines.append("")
+        lines.append("=" * 50)
+        lines.append("Top Correlations (for feature selection):")
+        lines.append("=" * 50)
+        
+        # Show top correlations for each numeric column
+        for col in list(correlation_data.keys())[:5]:  # Limit to first 5 columns
+            corrs = correlation_data[col]
+            if corrs:
+                lines.append(f"\n{col} — strongly correlated with:")
+                # Display top 3 correlations
+                for corr_col, corr_val in list(corrs.items())[:3]:
+                    lines.append(f"  → {corr_col}: {corr_val:.3f}")
+
+    # ================================================================
+    # Advanced Distribution Information
+    # ================================================================
+    if columns:
+        lines.append("")
+        lines.append("=" * 50)
+        lines.append("Distribution & Statistical Characteristics:")
+        lines.append("=" * 50)
+        
+        # Show skewness and kurtosis for numeric columns
+        skewed_cols = []
+        for col_name, stats in columns.items():
+            if "skewness" in stats:
+                skew = stats.get("skewness", 0)
+                if abs(skew) > 0.5:  # Moderately to highly skewed
+                    skewed_cols.append((col_name, skew))
+        
+        if skewed_cols:
+            lines.append("\nSkewed Distributions (may need transformation):")
+            for col, skew in sorted(skewed_cols, key=lambda x: abs(x[1]), reverse=True)[:5]:
+                direction = "right-skewed" if skew > 0 else "left-skewed"
+                lines.append(f"  {col}: {skew:.3f} ({direction})")
+        
+        # Show high-variance vs low-variance columns
+        variance_cols = []
+        for col_name, stats in columns.items():
+            if "coefficient_of_variation" in stats:
+                cv = stats.get("coefficient_of_variation", 0)
+                if cv > 0:
+                    variance_cols.append((col_name, cv))
+        
+        if variance_cols:
+            variance_cols.sort(key=lambda x: x[1], reverse=True)
+            lines.append("\nHigh-Variance Features (good predictors):")
+            for col, cv in variance_cols[:5]:
+                lines.append(f"  {col}: CV={cv:.3f}")
+
+    # ================================================================
     # Column Analysis — per-column detail
     # ================================================================
     columns = insights.get("columns", {})
     if columns:
         lines.append("")
         lines.append("=" * 50)
-        lines.append("Column Analysis:")
+        lines.append("Detailed Column Analysis:")
         lines.append("=" * 50)
 
         # Sort: worst (highest missing %) first for relevance
@@ -286,16 +380,45 @@ def insights_to_context(insights: dict) -> str:
             lines.append(f"  Cardinality: {stats['cardinality']:,}")
             lines.append(f"  Uniqueness Ratio: {stats['uniqueness_ratio']}")
 
-            # Numeric extras
+            # Numeric extras - enhanced with new metrics
             if "mean" in stats:
-                lines.append(f"  Mean: {stats['mean']}  |  Std: {stats['std']}")
+                lines.append(f"  Mean: {stats['mean']}  |  Median: {stats.get('median', 'N/A')}  |  Std: {stats['std']}")
                 lines.append(f"  Min: {stats['min']}  |  Max: {stats['max']}")
                 lines.append(f"  Q1: {stats['q1']}  |  Q3: {stats['q3']}")
-                lines.append(f"  IQR Outliers: {stats['iqr_outlier_count']:,}")
+                lines.append(f"  IQR: {stats.get('iqr', 'N/A')}  |  IQR Outliers: {stats['iqr_outlier_count']:,}")
+                
+                # FIX: Add advanced statistical information for modeling
+                lines.append(f"  Skewness: {stats.get('skewness', 'N/A')} (distribution shape)")
+                lines.append(f"  Kurtosis: {stats.get('kurtosis', 'N/A')} (tail heaviness)")
+                lines.append(f"  Coefficient of Variation: {stats.get('coefficient_of_variation', 'N/A')} (relative variability)")
+                lines.append(f"  Feature Quality Score: {stats.get('feature_quality_score', 'N/A')}/100 (modeling suitability)")
+                
+                if stats.get('is_constant'):
+                    lines.append("  ⚠ CONSTANT COLUMN (zero information, useless for modeling)")
+                elif stats.get('is_near_constant'):
+                    lines.append("  ⚠ NEAR-CONSTANT (very low variance)")
+                
+                # Add top correlations
+                top_corrs = stats.get("top_correlations", {})
+                if top_corrs:
+                    lines.append(f"  Top Correlations: {', '.join([f'{k}({v:.2f})' for k, v in list(top_corrs.items())[:3]])}")
 
-            # Categorical extras
+            # Categorical extras - enhanced
             if "top_value" in stats:
                 lines.append(f"  Top Value: {stats['top_value']} (freq: {stats['top_frequency']:,})")
+                
+                # FIX: Add class balance and distribution info
+                if "top_5_values" in stats:
+                    lines.append(f"  Top 5 Values Distribution:")
+                    for item in stats['top_5_values']:
+                        lines.append(f"    - {item['value']}: {item['count']:,} ({item['pct']}%)")
+                
+                if "imbalance_ratio" in stats:
+                    lines.append(f"  Class Imbalance Ratio: {stats['imbalance_ratio']} (1.0 = perfectly balanced)")
+                    lines.append(f"  Class Balance Score: {stats['class_balance_score']}/100")
+                
+                if "entropy" in stats:
+                    lines.append(f"  Distribution Uniformity: {stats.get('distribution_uniformity', 'N/A')}% (higher = more uniform)")
 
             # Privacy flag
             if stats.get("is_privacy_risk"):

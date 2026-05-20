@@ -53,8 +53,16 @@ def validate_format(df, field_name, format_type):
         "Custom": None  # User can define
     }
     
-    pattern = patterns.get(format_type, format_type)
+    # FIX: Handle Custom format type - get the regex pattern from rule config context
+    # This is passed through streamlit context, not from the standard patterns dict
+    if format_type == "Custom":
+        # Pattern will be None here - it needs to be provided separately by validate_conditional logic
+        # Return empty for now, caller should handle custom patterns differently
+        return violations
     
+    pattern = patterns.get(format_type, None)
+    
+    # Only process if we have a valid pattern
     if pattern:
         mask = ~df[field_name].astype(str).str.match(pattern, na=False)
         violations = df[mask & df[field_name].notnull()].copy()
@@ -69,20 +77,46 @@ def validate_range(df, field_name, min_val, max_val):
     violations = pd.DataFrame()
     
     try:
+        # FIX: Collect all violations separately, then add metadata columns
+        # This prevents index loss during concatenation
+        violation_indices = set()
+        violation_reasons = {}
+        
+        # Check minimum value violations
         if min_val is not None:
             mask_min = df[field_name] < min_val
-            violations = pd.concat([violations, df[mask_min].copy()])
+            min_violations = df[mask_min].copy()
+            
+            # Track indices and reasons
+            for idx in min_violations.index:
+                violation_indices.add(idx)
+                if idx not in violation_reasons:
+                    violation_reasons[idx] = []
+                violation_reasons[idx].append(f"{field_name} below minimum ({min_val})")
         
+        # Check maximum value violations
         if max_val is not None:
             mask_max = df[field_name] > max_val
-            violations = pd.concat([violations, df[mask_max].copy()])
+            max_violations = df[mask_max].copy()
+            
+            # Track indices and reasons
+            for idx in max_violations.index:
+                violation_indices.add(idx)
+                if idx not in violation_reasons:
+                    violation_reasons[idx] = []
+                violation_reasons[idx].append(f"{field_name} above maximum ({max_val})")
         
-        violations['violation_reason'] = f"{field_name}: Out of range [{min_val}, {max_val}]"
-        violations['violated_field'] = field_name
-    except:
-        pass
+        # Build violations dataframe once with proper index preservation
+        if violation_indices:
+            violations = df.loc[list(violation_indices)].copy()
+            violations['violation_reason'] = violations.index.map(
+                lambda idx: ' | '.join(violation_reasons[idx])
+            )
+            violations['violated_field'] = field_name
+    except Exception as e:
+        st.error(f"Error in validate_range: {str(e)}")
     
-    return violations.drop_duplicates()
+    return violations
 
 
 def validate_uniqueness(df, field_name):
@@ -127,16 +161,27 @@ def validate_conditional(df, condition_field, condition_value, then_field, then_
     violations = pd.DataFrame()
     
     try:
+        # FIX: Convert both sides to strings for robust comparison
+        # This handles type mismatches (e.g., comparing string "123" with numeric 123)
+        condition_field_values = df[condition_field].astype(str).str.strip()
+        then_field_values = df[then_field].astype(str).str.strip()
+        
+        condition_value_str = str(condition_value).strip()
+        then_value_str = str(then_value).strip()
+        
         # Find rows where condition is met
-        condition_mask = df[condition_field] == condition_value
-        # Among those, find violations of the THEN clause
-        then_mask = df[then_field] != then_value
+        condition_mask = condition_field_values == condition_value_str
+        
+        # Among those rows, find violations of the THEN clause
+        then_mask = then_field_values != then_value_str
         
         violations = df[condition_mask & then_mask].copy()
-        violations['violation_reason'] = f"IF {condition_field}='{condition_value}' THEN {then_field} must be '{then_value}'"
+        violations['violation_reason'] = (
+            f"IF {condition_field}='{condition_value}' THEN {then_field} must be '{then_value}'"
+        )
         violations['violated_field'] = f"{condition_field}, {then_field}"
-    except:
-        pass
+    except Exception as e:
+        st.error(f"Error in validate_conditional: {str(e)}")
     
     return violations
 

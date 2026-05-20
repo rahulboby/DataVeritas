@@ -8,7 +8,7 @@ Renders the AI Assistant page with:
 """
 
 import streamlit as st
-from core.ai.ai_assistant import (
+from core.ai.DQ_Copilot import (
     extract_dataset_insights,
     insights_to_context,
     build_llm_context,
@@ -26,6 +26,10 @@ EXAMPLE_QUESTIONS = [
     "Are there privacy risks in this dataset?",
     "Summarize the consistency rule violations.",
     "How many duplicate records exist and why does it matter?",
+    "Which 3 columns are best predictors for regression modeling?",
+    "Which columns have skewed distributions and need transformation?",
+    "Identify columns with high correlation for feature selection.",
+    "What are the most reliable features for machine learning?",
 ]
 
 

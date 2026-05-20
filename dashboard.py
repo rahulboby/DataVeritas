@@ -8,10 +8,11 @@ from sections import value_distribution as vdm
 from sections import duplicates as dm
 from sections import nulls as nm
 from sections import cardinality as cm
+from sections import extra_metrics as ExM
 from sections import outliers as om
 from sections import score as ScM
 from sections import consistency as ConM
-from sections import ai_assistant as AIM
+from sections import DQ_Copilot as AIM
 from core.data import generator as DG
 
 # ==================== PAGE CONFIG ====================
@@ -289,6 +290,7 @@ with st.sidebar:
         pages = {
             "Trust Score": "Data Trust Score",
             "Distribution": "Value Distribution Audit",
+            "Extra Metrics": "Extra Metrics Audit",
             "Cardinality": "Cardinality Audit",
             "Duplicates": "Uniqueness Audit",
             "Nulls": "Completeness Audit",
@@ -587,6 +589,13 @@ elif current_page == "Value Distribution Audit":
     st.session_state.module_timings["Value Distribution"] = elapsed
     print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
 
+elif current_page == "Extra Metrics Audit":
+    start = time.perf_counter()
+    ExM.displayExtraMetricsStats(filtered_df)
+    elapsed = time.perf_counter() - start
+    st.session_state.module_timings["Extra Metrics"] = elapsed
+    print(f"{current_page}: Execution Time: {elapsed:.3f} seconds")
+
 elif current_page == "Cardinality Audit":
     start = time.perf_counter()
     cm.displayCardinalityStats(filtered_df)
@@ -617,7 +626,6 @@ elif current_page == "Anomaly Audit":
 
 # The Tools: 
 elif current_page == "Data Consistency Rule Engine (BETA)":
-    st.warning("BETA Feature: Inaccurate results. Sill in processing.")
     ConM.displayConsistencyStats(filtered_df)
 
 elif current_page == "Entity Resolution Engine (BETA)":
