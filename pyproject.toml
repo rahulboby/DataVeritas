@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dataveritas"
+version = "2.0.0"
+description = "A Streamlit dashboard for data quality auditing and trust scoring"
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[project.scripts]
+dataveritas = "dataveritas.cli:main"
+
+[tool.setuptools]
+py-modules = ["dashboard"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dataveritas", "dataveritas.*", "core", "core.*", "sections", "sections.*"]
+namespaces = false
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
