@@ -251,7 +251,7 @@ def handle_floating_copilot_message(user_input: str, df):
         with st.spinner("Copilot is thinking..."):
             response = ask_llm(user_input, context)
     except ValueError as exc:
-        response = f"Groq is not configured: {exc}"
+        response = str(exc)
     except Exception as exc:
         response = f"Copilot request failed: {exc}"
 

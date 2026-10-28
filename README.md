@@ -25,7 +25,13 @@ Streamlit server options can be passed through:
 dataveritas serve --server.port 8502
 ```
 
-The dashboard runs locally; it does not require a separate API server. To use the optional AI assistant, set the `GROQ_API_KEY` environment variable before launching the app.
+The dashboard runs locally; it does not require a separate API server. The AI assistant tries Groq first using `GROQ_API_KEY` and falls back to local Ollama if Groq is unavailable. API keys are not included in the pip package; each user provides their own key in their environment or Streamlit secrets. For the fallback, install and start Ollama, then download the default model:
+
+```bash
+ollama pull llama3.2
+```
+
+Set `OLLAMA_MODEL` to use a different locally installed model, or `OLLAMA_HOST` if Ollama is running at a non-default address. If neither provider is available, the dashboard explains what needs to be configured.
 
 ## Install from a checkout
 

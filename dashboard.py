@@ -194,7 +194,7 @@ st.markdown("""
             text-transform: uppercase;
         }
 
-        .data-source-card {
+        .st-key-data_source_card {
             background: var(--surface);
             padding: 1.4rem;
             border-radius: 16px;
@@ -314,7 +314,7 @@ with st.sidebar:
             "Extra Metrics": "Extra Metrics",
             "Consistency": "Data Consistency Rule Engine (BETA)",
             "Data Merger": "Entity Resolution Engine (BETA)",
-            "Data Drift Detector": "Dataset Drift Detector (BETA)"
+            "Data Drift Detector": "Dataset Drift Detector"
         }
         st.subheader("Tools")
         # Render the rule buttons
@@ -409,9 +409,7 @@ if not st.session_state.dataset_ready or st.session_state.df is None:
     """, unsafe_allow_html=True)
 
     # Data loading card
-    with st.container():
-        st.markdown("<div class='data-source-card'>", unsafe_allow_html=True)
-
+    with st.container(key="data_source_card"):
         # Source selection
         tab1, tab2 = st.tabs(["Upload File", "Generate Sample Data (Testing Feature)"])
 
@@ -503,8 +501,6 @@ if not st.session_state.dataset_ready or st.session_state.df is None:
                     st.session_state.dataset_ready = False
                     st.session_state.df = None
                     st.error(f"Error generating data: {str(e)}")
-
-        st.markdown("</div>", unsafe_allow_html=True)
 
     st.stop()
 
@@ -646,7 +642,10 @@ elif current_page == "Entity Resolution Engine (BETA)":
     st.warning("BETA feature: Data Merger uses weighted scoring. This feature performs best with datasets under 5,000 rows.")
     display_merge_data(filtered_df)
 
-elif current_page == "Dataset Drift Detector (BETA)":
+elif current_page == "Dataset Drift Detector":
+    st.warning("Still under Development")
+
+elif current_page == "AI Readiness Score":
     st.warning("Still under Development")
 
 
